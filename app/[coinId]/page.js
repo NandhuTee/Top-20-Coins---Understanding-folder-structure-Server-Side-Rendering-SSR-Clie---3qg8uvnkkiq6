@@ -1,48 +1,49 @@
-// /app/[coinId]/page.js
-'use client';
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import './CoinDetail.css';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 function CoinDetail() {
-    const { coinId } = useParams(); // Extract coin ID from the URL
-    const [coin, setCoin] = useState(null);
+  // const [coin, setCoin] = useState(null); // null k case mein dynamic values are : {coins?.name} etc.
+  const [coin, setCoin] = useState({}); // & in this case values would be: {coins.name} etc.
+  const router = useRouter();
+  // console.log(router);
 
-    useEffect(() => {
-        // Fetch coin details using coin ID from the URL
-        async function fetchCoin() {
-            try {
-                const response = await fetch(`https://api.coinlore.net/api/ticker/?id=${coinId}`);
-                const data = await response.json();
-                if (response.ok) {
-                    setCoin(data[0]);
-                } else {
-                    console.error('Failed to fetch coin details');
-                }
-            } catch (error) {
-                console.error('Error fetching coin details:', error);
-            }
-        }
-        fetchCoin();
-    }, [coinId]);
+  async function getCoinDetails() {
+    // console.log(router.query.coin_id);
+    try {
+      const response = await fetch(
+        `https://api.coinlore.net/api/ticker/?id=${router.query.coin_id}`
+      );
+      const data = await response.json();
+      // console.log(data);
+      setCoin(data[0]);
+    } catch (err) {
+      console.log(err);
+    }
+  }
 
-    if (!coin) return <div>Loading...</div>;
+  useEffect(() => {
+    if (router.isReady && router.query.coin_id) {
+      getCoinDetails();
+    }
+  }, [router.isReady]);
 
-    return (
-        <div className='coin-detail'>
-            <div className='name-symbol'>
-                <h1 className='name'>{coin.name}</h1>
-                <h2 className='symbol'>({coin.symbol})</h2>
-            </div>
-            <div class='market-description'>
-                <p className='coin-rank'>Rank: {coin.rank}</p>
-                <p className='coin-price'>Price: ${coin.price_usd}</p>
-                <p className='coin-market-cap'>Market Cap: ${coin.market_cap_usd}</p>
-                <p className='coin-total-supply'>Total Supply: {coin.tsupply}</p>
-                <p className='coin-max-supply'>Max Supply: {coin.msupply || 'N/A'}</p>
-            </div>
-        </div>
-    );
+  return (
+    <div className="coin-detail">
+      <div className="name-symbol">
+        <h1 className="name">{coin.name}</h1>
+        <h2 className="symbol">{coin.symbol}</h2>
+      </div>
+      <div className="market-description">
+        <p className="coin-rank">Rank: {coin.rank}</p>
+        <p className="coin-price">Price: {coin.price_usd}</p>
+        <p className="coin-market-cap">Market Cap: {coin.market_cap_usd}</p>
+        <p className="coin-total-supply">Total Supply: {coin.tsupply}</p>
+        <p className="coin-max-supply">
+          Max Supply: {coin.msupply ? coin.msupply : "N/A"}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default CoinDetail;
